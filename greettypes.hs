@@ -1,4 +1,5 @@
 {-# LANGUAGE UndecidableInstances, FlexibleInstances #-}
+-- Mixing types and typeclasses in overloads.
 
 class Greetable g where
   hi :: g -> String

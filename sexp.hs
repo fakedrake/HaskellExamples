@@ -1,5 +1,13 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+
+-- Turn haskell types into start s-expressions.
+-- eg. parse 1 => "1"
+--     parse "Hello" => "\"hello\""
+--     parse False => f
+--     parse [1,2,3] => "(1 2 3 )"
+--     parse [[1],[2],[3]] => "((1 ) (2 ) (3 ) )"
+
 data EnchValue =
   EnchString [Char]
   | EnchNull
