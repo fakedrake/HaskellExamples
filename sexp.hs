@@ -8,6 +8,9 @@
 --     parse [1,2,3] => "(1 2 3 )"
 --     parse [[1],[2],[3]] => "((1 ) (2 ) (3 ) )"
 
+
+import Text.Printf
+
 data EnchValue =
   EnchString [Char]
   | EnchNull
@@ -15,6 +18,7 @@ data EnchValue =
   | EnchError String
   | EnchNum Integer
   | EnchChar Char
+  | EnchKv (String, EnchValue)
   | EnchArray [EnchValue]
   | EnchMap [(String, EnchValue)]
   deriving (Show, Read, Eq, Ord)
@@ -29,10 +33,11 @@ appendToStartArray v EnchNull = EnchArray [v]
 
 
 toStart :: EnchValue -> String
-toStart (EnchString s) = "\"" ++ s ++ "\""
+toStart (EnchString s) = printf "\"%s\"" s
 toStart (EnchBool True) = "t"
 toStart (EnchBool False) = "f"
 toStart (EnchArray arr) = "(" ++ (concatMap (\x -> (toStart x) ++ " ") arr) ++ ")"
+toStart (EnchKv (s, obj)) = "(:" ++ s ++ " " ++ (toStart obj) ++ ")"
 toStart (EnchChar c) = "'" ++ [c] ++ "'"
 toStart (EnchNum i) = show i
 
@@ -43,6 +48,9 @@ class StartType st where
 
 instance StartType EnchValue where
   fromNative = id
+
+instance StartType t => StartType (String, t) where
+  fromNative (s,t) = EnchKv (s, (fromNative t))
 
 instance StartType Bool where
   fromNative = EnchBool
