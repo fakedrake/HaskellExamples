@@ -9,18 +9,19 @@ type Pair = (Int, Int)
 operators :: [Op]
 operators = reverse [(\x y -> abs $ x - y), max, min, (+)]
 students  =      reverse ["Daphne", "Max", "Mindy", "Sam"]
+allPairs n = [(x,y) | x <- [1..n], y<-[x..n]]
 
 -- |From an operator to which we could know the answer to, and the
 -- maximum random number selected, find which pairs yield a unique
 -- answer to the operation.
 --
-possiblePairs' :: (Op) -> Int -> [Pair]
-possiblePairs' op n =
+possiblePairs' :: (Op) -> [Pair] -> [Pair]
+possiblePairs' op domain =
   map (fst . head) $
   filter ((== 1) . length) $    -- Get the unique answers
   groupBy (\x y -> (snd x == snd y)) $ -- Group common answers together
   sortOn snd $                         -- Sort by the answer
-  [((x,y), op x y) | x <- [1..n], y<-[x..n]]
+  [((x,y), op x y) | (x, y) <- domain]
 
 -- |For a student to win we assume tha the other students were unable
 -- to do so. So each kid whose turn comes will disregard all the
@@ -31,9 +32,10 @@ possiblePairs' op n =
 -- possible for any operators of the tail of the first arguments.
 possiblePairs :: [Op] -> Int -> [Pair]
 possiblePairs [] _ = []
-possiblePairs ops n = (possiblePairs' (head ops) n) \\ previousStudents
+possiblePairs ops n = possiblePairs' (head ops) $ allPairs n \\ previousStudents
   where
-    previousStudents = concat $ map (\op -> possiblePairs' op n) $ tail ops
+    previousStudents = concat $ map (\op -> possiblePairs op n) $ tail $ tails ops
+
 
 answer :: Int -> [(String, Float)]
 answer maxNum = reverse $ zipWith anskv students (tails operators)
