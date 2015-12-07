@@ -27,6 +27,10 @@ main = do
   let events = parse defaultParseOptions contents
   mapM_ print $ take 1000 $ mapMaybe toPair $ tags events
 
+data MyTag = Unclosed String String | Tag String String | NoTag deriving Show
+data Page = Page {text :: String, title :: String} deriving Show
+
+-- Turn an event stream into a tag strem
 tags :: [(SAXEvent String String)] -> [MyTag]
 tags [] = []
 tags (x:xs) = (foldl' buildLeaf NoTag h):(tags t) where
@@ -34,16 +38,16 @@ tags (x:xs) = (foldl' buildLeaf NoTag h):(tags t) where
   h = x:fst cns
   t = snd cns
 
+-- True if a tag is starting
 isStart :: SAXEvent String String -> Bool
 isStart (StartElement _ _) = True
 isStart _ = False
-
-data MyTag = Unclosed String String | Tag String String | NoTag deriving Show
 
 toPair :: MyTag -> Maybe (String, String)
 toPair (Tag n t) = Just (n, t)
 toPair _ = Nothing
 
+-- Compose tags from events
 buildLeaf :: MyTag -> SAXEvent String String -> MyTag
 buildLeaf NoTag (StartElement name _) = Unclosed name ""
 buildLeaf NoTag _ = NoTag
@@ -54,3 +58,6 @@ buildLeaf (Unclosed tn tt) (EndElement tname)
   | otherwise = (Unclosed tn tt)
 buildLeaf (Unclosed tn tt) (CharacterData txt) = (Unclosed tn (tt++txt))
 buildLeaf t _ = t
+
+toSql :: MyTag -> SqlTag
+toSql =

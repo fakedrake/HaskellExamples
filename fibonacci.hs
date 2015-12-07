@@ -6,6 +6,8 @@ import System.IO
 
 fibonacci :: Int -> Int
 fibonacci x = fst (fibm x)
+
+
 fibm :: Int -> (Int,Int)
 fibm 0 = (0,0)
 fibm 1 = (1,0)
@@ -18,4 +20,3 @@ main = do
   hFlush stdout
   -- Could be x <- getLine; .. (use x) .. but just to demo binding
   getLine >>= putStrLn . (printf "Fibonacci %d\n") . fibonacci . read
-

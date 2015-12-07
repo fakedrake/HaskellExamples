@@ -1,3 +1,4 @@
+import Control.Lens
 import Graphics.Gnuplot.Simple
 import System.Environment
 import Data.List
@@ -6,9 +7,20 @@ import Text.Printf
 type Op = Int -> Int -> Int
 type Pair = (Int, Int)
 
+int x = if x then 1 else 0
 operators :: [Op]
-operators = reverse [(\x y -> abs $ x - y), max, min, (+)]
-students  =      reverse ["Daphne", "Max", "Mindy", "Sam"]
+-- Reverse the operators so that head is the current student and tail
+-- are the preceeding.
+operatorsEvil = reverse [
+  \x y -> int (x == 1 && y == 1),
+  \x y -> int ((x,y) == (1,2)),
+  \x y -> int (y == 2),
+  \x y -> 0
+  ]
+operatorsOriginal = reverse [(\x y -> abs $ x - y), max, min, (+)]
+
+operators = operatorsOriginal
+students  = reverse ["Daphne", "Max", "Mindy", "Sam"]
 allPairs n = [(x,y) | x <- [1..n], y<-[x..n]]
 
 -- |From an operator to which we could know the answer to, and the
@@ -36,14 +48,15 @@ possiblePairs ops n = possiblePairs' (head ops) $ allPairs n \\ previousStudents
   where
     previousStudents = concat $ map (\op -> possiblePairs op n) $ tail $ tails ops
 
-
 answer :: Int -> [(String, Float)]
 answer maxNum = reverse $ zipWith anskv students (tails operators)
   where
     anskv :: String -> [Op] -> (String, Float)
-    anskv n ops = (n, (fromIntegral $ length $ pairs ops)
-                      / (fromIntegral (length pairList)))
+    anskv n ops = (n, (fromIntegral $ length $ realDomain $ pairs ops)
+                      / (fromIntegral $ length $ realDomain pairList))
     pairs ops = possiblePairs ops maxNum
+    -- The odds of a same digit pair are double.
+    realDomain dom = dom ++ [(x,y) | (x,y) <- dom, x /= y]
     pairList = [(x,y) | x <- [1..maxNum], y<-[x..maxNum]]
 
 -- From repl: plotData "/tmp/jane.png" [5..50]
@@ -65,7 +78,7 @@ plotData fname nums = plotPathsStyle plotArgs $
 
 main = do
   args <- getArgs
-  let n = read $ args !! 0 :: Int
+  let n = maybe 5 read (args ^? element 0)
   putStrLn "Students' probability of winning:"
   go $ answer n
   putStrLn $ "Total possible pairs: " ++ show ((n + 1) * n `div` 2)
