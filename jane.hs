@@ -1,4 +1,4 @@
--- import Graphics.Gnuplot.Simple
+import Graphics.Gnuplot.Simple
 import System.Environment
 import Data.List
 import Text.Printf
@@ -10,12 +10,9 @@ operators :: [Op]
 operators = reverse [(\x y -> abs $ x - y), max, min, (+)]
 students  =      reverse ["Daphne", "Max", "Mindy", "Sam"]
 
--- |From an operator to which we could know the answer to, and a list of
--- available pairs, find which pairs yield a unique answer to the
--- operation. For example
---
--- >>> possiblePairs (\x y -> abs (x - y)) [(1,2), (2,1), (3,3), (0,20)]
--- [(3,3), (0,20)]
+-- |From an operator to which we could know the answer to, and the
+-- maximum random number selected, find which pairs yield a unique
+-- answer to the operation.
 --
 possiblePairs' :: (Op) -> Int -> [Pair]
 possiblePairs' op n =
@@ -48,21 +45,21 @@ answer maxNum = reverse $ zipWith anskv students (tails operators)
     pairList = [(x,y) | x <- [1..maxNum], y<-[x..maxNum]]
 
 -- From repl: plotData "/tmp/jane.png" [5..50]
--- plotData :: FilePath -> [Int] -> IO ()
--- plotData fname nums = plotPathsStyle plotArgs $
---                       (zipWith lineTitle
---                        (map fst $ answer 0) results) ++ [totals]
---   where
---     names2Index i = map (\(n, p) -> (fromIntegral i :: Float, p))
---     lineSpec title = PlotStyle Lines (CustomStyle [LineTitle title])
---     sumResults = [names2Index n (answer n) | n <- nums]
---     results = transpose sumResults
---     totals = lineTitle "Total" $ map
---              (foldl (\(_,p1) (n, p2) -> (n, p1+p2)) (undefined, 0)) sumResults
---     plotArgs = [PNG fname,
---                 YLabel "Probablilty of winning",
---                 XLabel "Maximum random number"]
---     lineTitle title arr = (lineSpec title, arr)
+plotData :: FilePath -> [Int] -> IO ()
+plotData fname nums = plotPathsStyle plotArgs $
+                      (zipWith lineTitle
+                       (map fst $ answer 0) results) ++ [totals]
+  where
+    names2Index i = map (\(n, p) -> (fromIntegral i :: Float, p))
+    lineSpec title = PlotStyle Lines (CustomStyle [LineTitle title])
+    sumResults = [names2Index n (answer n) | n <- nums]
+    results = transpose sumResults
+    totals = lineTitle "Total" $ map
+             (foldl (\(_,p1) (n, p2) -> (n, p1+p2)) (undefined, 0)) sumResults
+    plotArgs = [PNG fname,
+                YLabel "Probablilty of winning",
+                XLabel "Maximum random number"]
+    lineTitle title arr = (lineSpec title, arr)
 
 main = do
   args <- getArgs
